@@ -1,51 +1,42 @@
-###### BASE ######
-FROM php:7.4-fpm-bullseye AS base
+FROM php:8.3.3-fpm-bullseye AS base
 
-# Install Debian packages
+## Install Composer
+COPY --from=composer:2.7.1 /usr/bin/composer /usr/bin/composer
+
+## Install Debian packages
 RUN apt update && apt install -y \
-    ... \
+    libsqlite3-dev \
     nginx
 
-# Install Wkhtmltopdf
-RUN wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb -P ~\ 
-    && dpkg -i ~/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && apt -f install
+## Install PHP extensions
+# RUN pecl install ...
 
-# Install Composer
-COPY --from=composer:2.2.23 /usr/bin/composer /usr/bin/composer
-
-# Install PHP extensions
-RUN pecl install \
-    ...
-
-RUN docker-php-ext-configure \
-    ... --enable-... --with-...
+# RUN docker-php-ext-configure ...
 
 RUN docker-php-ext-install \
-    ...
+    pdo_sqlite
 
-RUN docker-php-ext-enable \
-    ...
+# RUN docker-php-ext-enable ...
 
-# Create non-root user
+## Create non-root user
 ARG APP_USER="app"
 RUN addgroup --gid 3000 --system ${APP_USER}
 RUN adduser --uid 3000 --system --disabled-login --disabled-password --gid 3000 ${APP_USER}
 
-# Copy site
-WORKDIR /var/www/project
+## Copy site
+WORKDIR /var/www/html
 COPY . .
-RUN chown -R ${APP_USER}:${APP_USER} /var/www/project \
-    && find /var/www/project -type d -exec chmod 0755 {} \; \
-    && find /var/www/project -type f -exec chmod 0644 {} \;
+RUN chown -R ${APP_USER}:${APP_USER} /var/www/html \
+    && find /var/www/html -type d -exec chmod 0755 {} \; \
+    && find /var/www/html -type f -exec chmod 0644 {} \;
 
-# Configure FPM
-RUN mv conf/php-fpm.conf $PHP_INI_DIR-fpm.d/zz-docker.conf \
+## Configure FPM
+RUN mv server/php-fpm.conf $PHP_INI_DIR-fpm.d/zz-docker.conf \
     && mkdir /run/php \
     && chown -R ${APP_USER}:${APP_USER} /run/php
 
 # Configure Nginx
-RUN mv conf/nginx-site-dev.conf /etc/nginx/sites-available/default \
+RUN mv server/nginx-site.conf /etc/nginx/sites-available/default \
     && mkdir -p /var/cache/nginx \
     && touch /run/nginx.pid \
     && chown -R ${APP_USER}:${APP_USER} \
@@ -57,26 +48,19 @@ RUN mv conf/nginx-site-dev.conf /etc/nginx/sites-available/default \
 
 ## Configure entrypoint
 RUN mkdir /docker-entrypoint.d \
-    && mv conf/docker-entrypoint.sh /docker-entrypoint.d/ \
+    && mv server/docker-entrypoint.sh /docker-entrypoint.d/ \
     && chmod +x /docker-entrypoint.d/docker-entrypoint.sh 
-
-# Make database migration
-RUN php migration...
 
 EXPOSE 80
 
 ###### DEV ######
 FROM base AS dev
 
-# Variables
 ENV APP_ENV="dev"
 
 # Configure PHP
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
-    && mv conf/php-ini-dev.conf $PHP_INI_DIR/conf.d/docker-php-replace-development.ini
-
-# Configure debug
-RUN echo "xdebug...." >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    && mv server/php-ini-dev.conf $PHP_INI_DIR/conf.d/docker-php-replace-development.ini
 
 # Composer install
 USER ${APP_USER}
@@ -87,12 +71,11 @@ ENTRYPOINT ["/docker-entrypoint.d/docker-entrypoint.sh"]
 ###### PROD ######
 FROM base AS prod
 
-# Variables
-ENV APP_ENV=prod
+ENV APP_ENV="prod"
 
 # Configure PHP
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
-    && mv conf/php-ini-prod.conf $PHP_INI_DIR/conf.d/docker-php-replace-production.ini
+    && mv server/php-ini-prod.conf $PHP_INI_DIR/conf.d/docker-php-replace-production.ini
 
 # Composer install
 USER ${APP_USER}
