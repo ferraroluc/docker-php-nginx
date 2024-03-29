@@ -1,6 +1,6 @@
 # Docker Container with Nginx and PHP-FPM
 
-PHP application in a single container with PHP-FPM and Nginx using a non-root user.
+PHP Laravel application in a single container with PHP-FPM and Nginx using a non-root user.
 
 ## Software versions
 
