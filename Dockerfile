@@ -6,7 +6,9 @@ COPY --from=composer:2.7.1 /usr/bin/composer /usr/bin/composer
 ## Install Debian packages
 RUN apt update && apt install -y \
     libsqlite3-dev \
-    nginx
+    nginx \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
 
 ## Install PHP extensions
 # RUN pecl install ...
