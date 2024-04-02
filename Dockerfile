@@ -37,7 +37,7 @@ RUN mv server/php-fpm.conf $PHP_INI_DIR-fpm.d/zz-docker.conf \
     && mkdir /run/php \
     && chown -R ${APP_USER}:${APP_USER} /run/php
 
-# Configure Nginx
+## Configure Nginx
 RUN mv server/nginx-site.conf /etc/nginx/sites-available/default \
     && mkdir -p /var/cache/nginx \
     && touch /run/nginx.pid \
@@ -51,7 +51,11 @@ RUN mv server/nginx-site.conf /etc/nginx/sites-available/default \
 ## Configure entrypoint
 RUN mkdir /docker-entrypoint.d \
     && mv server/docker-entrypoint.sh /docker-entrypoint.d/ \
-    && chmod +x /docker-entrypoint.d/docker-entrypoint.sh 
+    && chmod +x /docker-entrypoint.d/docker-entrypoint.sh
+
+## Prepare database migration
+RUN mv server/database-migration.sh /docker-entrypoint.d/ \
+    && chmod +x /docker-entrypoint.d/database-migration.sh
 
 EXPOSE 80
 
@@ -60,11 +64,11 @@ FROM base AS dev
 
 ENV APP_ENV="dev"
 
-# Configure PHP
+## Configure PHP
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
     && mv server/php-ini-dev.conf $PHP_INI_DIR/conf.d/docker-php-replace-development.ini
 
-# Composer install
+## Composer install
 USER ${APP_USER}
 RUN composer install --no-interaction --prefer-dist
 
@@ -75,11 +79,11 @@ FROM base AS prod
 
 ENV APP_ENV="prod"
 
-# Configure PHP
+## Configure PHP
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && mv server/php-ini-prod.conf $PHP_INI_DIR/conf.d/docker-php-replace-production.ini
 
-# Composer install
+## Composer install
 USER ${APP_USER}
 RUN composer install --no-cache --no-interaction --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 

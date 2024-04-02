@@ -30,6 +30,8 @@ Test: http://localhost:8000/hello
 docker build --target dev -t hello .
 # Or build PROD
 docker build --target prod -t hello .
+# Database migration
+docker run --rm --entrypoint="/docker-entrypoint.d/database-migration.sh" hello:latest
 # Run
 docker run -p 3000:80 --name hello hello:latest
 ```
