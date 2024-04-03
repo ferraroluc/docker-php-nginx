@@ -23,8 +23,8 @@ jobs:
 
       - name: Docker Build
         run: |
-          docker build --target dev -t ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:latest .
-          docker build --target dev -t ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:${{ steps.build-id.outputs.id }} .
+          docker build --target prod -t ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:latest .
+          docker build --target prod -t ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:${{ steps.build-id.outputs.id }} .
 
       - name: Docker Push
         run: |

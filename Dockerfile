@@ -5,6 +5,7 @@ COPY --from=composer:2.7.1 /usr/bin/composer /usr/bin/composer
 
 ## Install Debian packages
 RUN apt update && apt install -y \
+    git \
     libsqlite3-dev \
     nginx \
     && apt clean \
