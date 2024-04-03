@@ -1,0 +1,32 @@
+name: Build and push to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get build ID
+        id: build-id
+        run: echo "::set-output name=id::$(echo $GITHUB_RUN_ID)"
+
+      - name: Docker Login
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Docker Build
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:${{ steps.build-id.outputs.id }} .
+
+      - name: Docker Push
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-php-nginx:${{ steps.build-id.outputs.id }}
