@@ -58,7 +58,7 @@ RUN mkdir /docker-entrypoint.d \
 RUN mv server/database-migration.sh /docker-entrypoint.d/ \
     && chmod +x /docker-entrypoint.d/database-migration.sh
 
-EXPOSE 80
+EXPOSE 8080
 
 ###### DEV ######
 FROM base AS dev

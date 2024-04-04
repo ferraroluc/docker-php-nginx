@@ -33,7 +33,7 @@ docker build --target prod -t hello .
 # Database migration
 docker run --rm --entrypoint="/docker-entrypoint.d/database-migration.sh" hello:latest
 # Run
-docker run -p 3000:80 --name hello hello:latest
+docker run -p 3000:8080 --name hello hello:latest
 ```
 
 Test: http://localhost:3000/hello
